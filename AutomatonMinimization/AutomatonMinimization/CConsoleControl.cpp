@@ -6,6 +6,7 @@
 CConsoleControl::CConsoleControl(std::istream& input, std::ostream& output)
 	: m_input(input)
 	, m_output(output)
+	, m_machineInfo({0, 0, 0})
 	, m_actionMap(
 		{
 			{ "Ml", std::bind(&CConsoleControl::MinimizeMealyMachine, this) },
@@ -20,19 +21,8 @@ void CConsoleControl::HandleCommand()
 	getline(m_input, consoleLine);
 
 	auto it = m_actionMap.find(consoleLine);
-	if (it == m_actionMap.end())
-	{
-		throw std::invalid_argument("Введите строку \"Ml\" или \"Mr\"");
-	}
-	
-	try
-	{
-		GetQuantitativeParamsOfMachine();
-	}
-	catch (std::exception&)
-	{
-		throw;
-	}
+
+	GetMachineInfo();
 
 	return it->second();
 }
@@ -40,52 +30,61 @@ void CConsoleControl::HandleCommand()
 void CConsoleControl::MinimizeMealyMachine()
 {
 	ReadMealyAutomaton();
-	std::vector<std::vector<int>> infoAboutEquivalenceStates = m_mealyMinimizer.MinimizeMealyMachine();
-	WriteInfoAboutEquivalenceStates(infoAboutEquivalenceStates, m_mealyMinimizer.GetIsThereZeroState());
-	std::vector <std::vector<int>> transitionMap = m_mealyMinimizer.GetTransitionMap();
-	std::vector <std::string> outputMap = m_mealyMinimizer.GetOutputMap();
-	m_output << "переходы:\n";
-	for (std::vector<int> vectorOfStateNumber : transitionMap)
+	m_mealyMinimizer.MinimizeMachine();
+	WriteMinimizedMealyAutomaton(m_mealyMinimizer.GetIsThereZeroState());
+}
+
+void CConsoleControl::WriteMinimizedMealyAutomaton(const bool isThereZeroState)
+{
+	std::vector <std::vector<int>> transitions = m_mealyMinimizer.GetTransitions();
+	std::vector <std::vector<int>> outputs = m_mealyMinimizer.GetOutputs();
+
+	std::vector<std::vector<std::string>> result(transitions[0].size(), std::vector<std::string>(transitions.size()));
+	for (size_t i = 0; i < transitions[0].size(); i++)
 	{
-		for (int stateNumber : vectorOfStateNumber)
+		for (size_t j = 0; j < transitions.size(); j++) 
 		{
-			m_output << stateNumber << " ";
+			result[i][j] = std::to_string(transitions[j][i]).append("/y").append(std::to_string(outputs[j][i]));
 		}
-		m_output << "\n";
 	}
 
-	m_output << "выходы:\n";
-	for (std::string str : outputMap)
+	for (size_t i = 0; i < result.size(); i++)
 	{
-		m_output << str << "\n";
+		for (size_t j = 0; j < result[i].size(); j++)
+		{
+			m_output << "S" << result[i][j] << " ";
+		}
+		m_output << "\n";
 	}
 }
 
-void CConsoleControl::WriteInfoAboutEquivalenceStates(std::vector<std::vector<int>> infoAboutEquivalenceStates, bool isThereZeroState)
+void CConsoleControl::WriteMinimizedMooreAutomaton(const bool isThereZeroState)
 {
-	if (infoAboutEquivalenceStates.size() < m_numberOfStates)
+	std::vector <std::vector<int>> transitions = m_mooreMinimizer.GetTransitions();
+	std::vector<int> outputs = m_mooreMinimizer.GetOutputs();
+
+	for (size_t i = 0; i < outputs.size(); i++)
 	{
-		m_output << "Найдены следующие эквивалентные состояния: ";
-		for (std::vector<int> equivalenceStates : infoAboutEquivalenceStates)
+		m_output << "y" << outputs[i] << " ";
+	}
+	m_output << "\n";
+
+	std::vector<std::vector<int>> result(transitions[0].size(), std::vector<int>(transitions.size()));
+	for (size_t i = 0; i < transitions[0].size(); i++)
+	{
+		for (size_t j = 0; j < transitions.size(); j++)
 		{
-			//if(equivalenceStates.size() > 1)
-			{
-				m_output << " { ";
-				for (int equivalenceState : equivalenceStates)
-				{
-					if (!isThereZeroState)
-					{
-						m_output << equivalenceState + 1 << " ";
-					}
-				}
-				m_output << "} ";
-			}
+			result[i][j] = transitions[j][i];
+		}
+	}
+
+	for (size_t i = 0; i < result.size(); i++)
+	{
+		for (size_t j = 0; j < result[i].size(); j++)
+		{
+			m_output << "S" << result[i][j] << " ";
 		}
 		m_output << "\n";
-	}
-	else
-	{ 
-		m_output << "Автомат уже минимизирован";
 	}
 }
 
@@ -93,57 +92,39 @@ void CConsoleControl::MinimizeMooreMachine()
 {
 	ReadOutputCharactersForMooreAutomaton();
 	ReadMooreAutomaton();
-	m_mooreMinimizer.MinimizeMooreMachine();
+	m_mooreMinimizer.MinimizeMachine();
+	WriteMinimizedMooreAutomaton(m_mooreMinimizer.GetIsThereZeroState());
 }
 
-int CConsoleControl::ReadPositiveInt()
+int CConsoleControl::ReadInt()
 {
 	std::string str;
 	getline(m_input, str);
-	std::istringstream strm(str);
-
-	int x;
-	strm >> x;
-	if (strm.fail() || x <= 0)
-	{
-		throw std::invalid_argument("Число должно быть целым и больше 0");
-	}
-	return  x;
+	return  std::stoi(str);
 }
 
-void CConsoleControl::GetQuantitativeParamsOfMachine()
+void CConsoleControl::GetMachineInfo()
 {
-	try
-	{
-		m_output << "Введите количество состояний\n>";
-		m_numberOfStates = ReadPositiveInt();
-		m_output << "Введите количество входных символов\n>";
-		m_numberOfInputCharacters = ReadPositiveInt();
-		m_output << "Введите количество выходных символов\n>";
-		m_numberOfOutputCharacters = ReadPositiveInt();
-	}
-	catch (std::exception&)
-	{
-		throw;
-	}
+	m_machineInfo.numberOfStates = ReadInt();
+	m_machineInfo.numberOfInputCharacters = ReadInt();
+	m_machineInfo.numberOfOutputCharacters = ReadInt();
+
+	m_mealyMinimizer.SetMachineInfo(m_machineInfo);
+	m_mooreMinimizer.SetMachineInfo(m_machineInfo);
 }
 
 void CConsoleControl::ReadMealyAutomaton()
 {
-	std::vector <std::vector<int>> transitionMap;
-	std::vector <std::string> outputMap;
-	transitionMap.resize(m_numberOfStates);
-	outputMap.resize(m_numberOfStates);
+	std::vector <std::vector<int>> transitions(m_machineInfo.numberOfStates);
+	std::vector <std::vector<int>> outputs(m_machineInfo.numberOfStates);
 
 	std::string str;
-	for (int i = 0; i < m_numberOfInputCharacters; i++)
+	for (size_t i = 0; i < m_machineInfo.numberOfInputCharacters; i++)
 	{
-		m_output << "Введите строку таблицы\n>";
-
 		str = GetLineWithoutInputCharacter();
 		std::stringstream iss(str);
 		
-		for (int j = 0; j < m_numberOfStates; j++)
+		for (size_t j = 0; j < m_machineInfo.numberOfStates; j++)
 		{
 			getline(iss, str, '/');
 			str.erase(0, str.find_first_of("1234567890"));
@@ -151,16 +132,16 @@ void CConsoleControl::ReadMealyAutomaton()
 			{
 				m_mealyMinimizer.SetIsThereZeroState(true);
 			}
-			transitionMap[j].push_back(std::stoi(str));
+			transitions[j].push_back(std::stoi(str));
 			
 			getline(iss, str, ' ');
-			transform(str.begin(), str.end(), str.begin(), tolower);
-			outputMap[j].append(str);
+			str.erase(0, str.find_first_of("1234567890"));
+			outputs[j].push_back(std::stoi(str));
 		}
 	}
 
-	m_mealyMinimizer.SetTransitionMap(transitionMap);
-	m_mealyMinimizer.SetOutputMap(outputMap);
+	m_mealyMinimizer.SetTransitions(transitions);
+	m_mealyMinimizer.SetOutputs(outputs);
 
 }
 
@@ -177,42 +158,42 @@ std::string CConsoleControl::GetLineWithoutInputCharacter()
 
 void CConsoleControl::ReadOutputCharactersForMooreAutomaton()
 {
-	std::vector <int> outputMap;
-	m_output << "Введите строку выходных сигналов\n>";
+	std::vector <int> outputs;
 	std::string str;
 	getline(m_input, str);
 	std::stringstream iss(str);
-	for (int i = 0; i < m_numberOfStates; i++)
+	for (size_t i = 0; i < m_machineInfo.numberOfStates; i++)
 	{
 		getline(iss, str, ' ');
 		str.erase(0, str.find_first_of("1234567890"));
-		outputMap.push_back(std::stoi(str));
+		outputs.push_back(std::stoi(str));
 	}
 
-	m_mooreMinimizer.SetOutputMap(outputMap);
+	m_mooreMinimizer.SetOutputs(outputs);
 }
 
 void CConsoleControl::ReadMooreAutomaton()
 {
-	std::vector <std::vector<int>> transitionMap;
-	transitionMap.resize(m_numberOfStates);
+	std::vector <std::vector<int>> transitions(m_machineInfo.numberOfStates);
 
 	std::string str;
-	for (int i = 0; i < m_numberOfInputCharacters; i++)
+	for (size_t i = 0; i < m_machineInfo.numberOfInputCharacters; i++)
 	{
-		m_output << "Введите строку таблицы\n>";
-
 		str = GetLineWithoutInputCharacter();
 		std::stringstream iss(str);
 
-		for (int j = 0; j < m_numberOfStates; j++)
+		for (size_t j = 0; j < m_machineInfo.numberOfStates; j++)
 		{
 			getline(iss, str, ' ');
 			str.erase(0, str.find_first_of("1234567890"));
-			transitionMap[j].push_back(std::stoi(str));
+			if (str == "0")
+			{
+				m_mooreMinimizer.SetIsThereZeroState(true);
+			}
+			transitions[j].push_back(std::stoi(str));
 		}
 	}
 
-	m_mooreMinimizer.SetTransitionMap(transitionMap);
+	m_mooreMinimizer.SetTransitions(transitions);
 }
 

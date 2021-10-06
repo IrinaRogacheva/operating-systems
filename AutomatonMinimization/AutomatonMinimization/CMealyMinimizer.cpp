@@ -3,72 +3,82 @@
 #include <iostream>
 
 CMealyMinimizer::CMealyMinimizer()
+	:m_machineInfo({ 0, 0, 0 })
 {
 }
 
-std::vector<std::vector<int>> CMealyMinimizer::MinimizeMealyMachine()
+void CMealyMinimizer::MinimizeMachine()
 {
-	FindFirstEquivalenceClasses();
+	FindFirstEquivalenceClass();
 
-	int i = 0;
 	do
 	{
-		FindNextPartition(i);
-		i++;
-	} while (m_equivalenceClasses[m_equivalenceClasses.size() - 1] > m_equivalenceClasses[m_equivalenceClasses.size() - 2]);
+		m_previousSplittingByEquivalenceClasses = m_splittingByEquivalenceClasses;
+		std::vector <std::vector<int>> newTransitions = GetNewTransitions();
+		FindNextEquivalenceClass(newTransitions);
 
-	GetMinimizedMachine();
+	} while (m_previousSplittingByEquivalenceClasses != m_splittingByEquivalenceClasses);
 
-	return GetInfoAboutEquivalenceStates();
+	RemoveEquivalentStates();
+	ReplaceTransitions();
 }
 
-std::vector<std::vector<int>> CMealyMinimizer::GetInfoAboutEquivalenceStates()
+void CMealyMinimizer::RemoveEquivalentStates()
 {
-	std::vector<std::vector<int>> infoAboutEquivalenceStates;
-	int numberOfEquivalenceClasses = m_equivalenceClasses[m_equivalenceClasses.size() - 1] + 1;
-	infoAboutEquivalenceStates.resize(numberOfEquivalenceClasses);
-	for (int i = 0; i < m_equivalenceClassesToStates[m_equivalenceClassesToStates.size() - 1].size(); i++)//количество состояний
+	std::set<int> uniqueClasses;
+	std::vector <std::vector<int>> newTransitions;
+	std::vector <std::vector<int>> newOutputs;
+
+	for (size_t i = 0; i < m_transitions.size(); i++)
 	{
-		for (int j = 0; j < numberOfEquivalenceClasses; j++)
+		if (!uniqueClasses.count(m_splittingByEquivalenceClasses[i]))
 		{
-			if (m_equivalenceClassesToStates[m_equivalenceClassesToStates.size()-1][i] == j)
+			newTransitions.push_back(m_transitions[i]);
+			newOutputs.push_back(m_outputs[i]);
+		}
+		uniqueClasses.insert(m_splittingByEquivalenceClasses[i]);
+	}
+
+	m_transitions = newTransitions;
+	m_outputs = newOutputs;
+}
+
+void CMealyMinimizer::ReplaceTransitions()
+{
+	for (size_t i = 0; i < m_transitions.size(); i++)
+	{
+		for (size_t j = 0; j < m_transitions[i].size(); j++)
+		{
+			if (!m_isThereZeroState)
 			{
-				if (!m_isThereZeroState)
-				{
-					infoAboutEquivalenceStates[j].push_back(i);
-				}
+				m_transitions[i][j] = m_splittingByEquivalenceClasses[m_transitions[i][j] - 1];
+			}
+			else
+			{
+				m_transitions[i][j] = m_splittingByEquivalenceClasses[m_transitions[i][j]];
 			}
 		}
 	}
-	return infoAboutEquivalenceStates;
 }
 
-void CMealyMinimizer::GetMinimizedMachine()
+void CMealyMinimizer::SetTransitions(const std::vector<std::vector<int>> transitions)
 {
-	std::set<int> uniqueClasses;
-	for (int i = 0; i < m_transitionMap.size(); i++)
-	{
-		if (uniqueClasses.count(m_equivalenceClassesToStates[m_equivalenceClassesToStates.size() - 1][i]))
-		{
-			m_transitionMap.erase(m_transitionMap.begin() + i);
-		}
-		uniqueClasses.insert(m_equivalenceClassesToStates[m_equivalenceClassesToStates.size() - 1][i]);
-	}
+	m_transitions = transitions;
 }
 
-void CMealyMinimizer::SetTransitionMap(std::vector<std::vector<int>> transitionMap)
+void CMealyMinimizer::SetOutputs(const std::vector<std::vector<int>> outputs)
 {
-	m_transitionMap = transitionMap;
+	m_outputs = outputs;
 }
 
-void CMealyMinimizer::SetOutputMap(std::vector<std::string> outputMap)
-{
-	m_outputMap = outputMap;
-}
-
-void CMealyMinimizer::SetIsThereZeroState(bool isThereZeroState)
+void CMealyMinimizer::SetIsThereZeroState(const bool isThereZeroState)
 {
 	m_isThereZeroState = isThereZeroState;
+}
+
+void CMealyMinimizer::SetMachineInfo(const SMachineInfo SMachineInfo)
+{
+	m_machineInfo = SMachineInfo;
 }
 
 bool CMealyMinimizer::GetIsThereZeroState()
@@ -76,50 +86,44 @@ bool CMealyMinimizer::GetIsThereZeroState()
 	return m_isThereZeroState;
 }
 
-std::vector<std::vector<int>> CMealyMinimizer::GetTransitionMap()
+std::vector<std::vector<int>> CMealyMinimizer::GetTransitions()
 {
-	return m_transitionMap;
+	return m_transitions;
 }
 
-std::vector<std::string> CMealyMinimizer::GetOutputMap()
+std::vector<std::vector<int>> CMealyMinimizer::GetOutputs()
 {
-	return m_outputMap;
+	return m_outputs;
 }
 
-void CMealyMinimizer::FindFirstEquivalenceClasses()
+void CMealyMinimizer::FindFirstEquivalenceClass()
 {
-	std::set<std::string> uniqueOutputs(m_outputMap.begin(), m_outputMap.end());
-	m_equivalenceClasses.push_back(uniqueOutputs.size());
+	std::set<std::vector<int>> uniqueOutputs(m_outputs.begin(), m_outputs.end());
 
-	std::vector<int> equivalenceClasses;
-
-	std::set<std::string>::iterator it;
-	for (int i = 0; i < m_outputMap.size(); i++)
+	std::set<std::vector<int>>::iterator it;
+	for (size_t i = 0; i < m_outputs.size(); i++)
 	{
-		it = uniqueOutputs.find(m_outputMap[i]);
+		it = uniqueOutputs.find(m_outputs[i]);
 		if (it != uniqueOutputs.end())
 		{
-			equivalenceClasses.push_back(std::distance(uniqueOutputs.begin(), it));
+			m_splittingByEquivalenceClasses.push_back(std::distance(uniqueOutputs.begin(), it));
 		}
 	}
-	m_equivalenceClassesToStates.push_back(equivalenceClasses);
 }
 
-void CMealyMinimizer::FindNextEquivalenceClass(int numberOfEquivalenceClass, std::vector <std::vector<int>> newTransitions)
+void CMealyMinimizer::FindNextEquivalenceClass(const std::vector <std::vector<int>> newTransitions)
 {
-	std::vector<int> equivalenceClasses;
-	equivalenceClasses.resize(newTransitions.size());
 	int numberOfNewEquivalenceClass = 0;
-	equivalenceClasses[0] = numberOfNewEquivalenceClass;
-	
-	for (int i = 1; i < newTransitions.size(); i++)
+	m_splittingByEquivalenceClasses[0] = numberOfNewEquivalenceClass;
+	bool isFound;
+	for (size_t i = 1; i < newTransitions.size(); i++)
 	{
-		bool isFound = false;
-		for (int j = 0; j < i; j++)
+		isFound = false;
+		for (size_t j = 0; j < i; j++)
 		{
-			if (newTransitions[j] == newTransitions[i])
+			if (newTransitions[j] == newTransitions[i] && m_previousSplittingByEquivalenceClasses[j] == m_previousSplittingByEquivalenceClasses[i])
 			{
-				equivalenceClasses[i] = equivalenceClasses[j];
+				m_splittingByEquivalenceClasses[i] = m_splittingByEquivalenceClasses[j];
 				isFound = true;
 				break;
 			}
@@ -128,30 +132,25 @@ void CMealyMinimizer::FindNextEquivalenceClass(int numberOfEquivalenceClass, std
 		if (!isFound)
 		{
 			numberOfNewEquivalenceClass++;
-			equivalenceClasses[i] = numberOfNewEquivalenceClass;
+			m_splittingByEquivalenceClasses[i] = numberOfNewEquivalenceClass;
 		}
 	}
-	m_equivalenceClassesToStates.push_back(equivalenceClasses);
-	m_equivalenceClasses.push_back(numberOfNewEquivalenceClass);
 }
 
-void CMealyMinimizer::FindNextPartition(int numberOfEquivalenceClass)//nextEquivalenceClass
+std::vector <std::vector<int>> CMealyMinimizer::GetNewTransitions()
 {
-	std::vector <std::vector<int>> newTransitions = GetNewTransitions(numberOfEquivalenceClass);
-	FindNextEquivalenceClass(numberOfEquivalenceClass, newTransitions);
-}
-
-std::vector <std::vector<int>> CMealyMinimizer::GetNewTransitions(int numberOfEquivalenceClass)
-{
-	std::vector <std::vector<int>> newTransitions;
-	newTransitions.resize(m_transitionMap.size());
-	for (int i = 0; i < m_transitionMap.size(); i++)
+	std::vector <std::vector<int>> newTransitions(m_machineInfo.numberOfStates);
+	for (size_t i = 0; i < m_transitions.size(); i++)
 	{
-		for (int j = 0; j < m_transitionMap[i].size(); j++)
+		for (size_t j = 0; j < m_transitions[i].size(); j++)
 		{
 			if (!m_isThereZeroState)
 			{
-				newTransitions[i].push_back(m_equivalenceClassesToStates[numberOfEquivalenceClass][m_transitionMap[i][j] - 1]);
+				newTransitions[i].push_back(m_splittingByEquivalenceClasses[m_transitions[i][j] - 1]);
+			}
+			else
+			{
+				newTransitions[i].push_back(m_splittingByEquivalenceClasses[m_transitions[i][j]]);
 			}
 		}
 	}

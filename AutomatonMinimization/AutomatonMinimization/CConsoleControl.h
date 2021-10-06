@@ -16,21 +16,19 @@ public:
 private:
 	void MinimizeMealyMachine();
 	void MinimizeMooreMachine();
-	int ReadPositiveInt();
+	int ReadInt();
 	void ReadMealyAutomaton();
 	void ReadMooreAutomaton();
-	void GetQuantitativeParamsOfMachine();
+	void GetMachineInfo();
 	std::string GetLineWithoutInputCharacter();
 	void ReadOutputCharactersForMooreAutomaton();
-	void WriteInfoAboutEquivalenceStates(std::vector<std::vector<int>> infoAboutEquivalenceStates, bool isThereZeroState);
+	void WriteMinimizedMealyAutomaton(const bool isThereZeroState);
+	void WriteMinimizedMooreAutomaton(const bool isThereZeroState);
 
 	std::istream& m_input;
 	std::ostream& m_output;
 
-	int m_numberOfStates;
-	int m_numberOfInputCharacters;
-	int m_numberOfOutputCharacters;
-
+	SMachineInfo m_machineInfo;
 	CMealyMinimizer m_mealyMinimizer;
 	CMooreMinimizer m_mooreMinimizer;
 

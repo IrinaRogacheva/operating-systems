@@ -1,32 +1,34 @@
 #pragma once
 #include <string>
 #include <vector>
+#include "SMachineInfo.h"
 
 class CMealyMinimizer
 {
 public:
 	CMealyMinimizer();
-	std::vector<std::vector<int>> MinimizeMealyMachine();
-	void SetTransitionMap(std::vector <std::vector<int>> transitionMap);
-	void SetOutputMap(std::vector <std::string> outputMap);
-	void SetIsThereZeroState(bool isThereZeroState);
+	void MinimizeMachine();
+	void SetTransitions(const std::vector <std::vector<int>> transitions);
+	void SetOutputs(const std::vector <std::vector<int>> outputs);
+	void SetIsThereZeroState(const bool isThereZeroState);
+	void SetMachineInfo(const SMachineInfo SMachineInfo);
 	bool GetIsThereZeroState();
-	std::vector <std::vector<int>> GetTransitionMap();
-	std::vector <std::string> GetOutputMap();
+	std::vector <std::vector<int>> GetTransitions();
+	std::vector <std::vector<int>> GetOutputs();
+	void FindFirstEquivalenceClass();
 private:
-	void FindFirstEquivalenceClasses();
-	void FindNextPartition(int numberOfEquivalenceClass);
-	std::vector <std::vector<int>> GetNewTransitions(int numberOfEquivalenceClass);
-	void FindNextEquivalenceClass(int numberOfEquivalenceClass, std::vector <std::vector<int>> newTransitions);
-	void GetMinimizedMachine();
+	std::vector <std::vector<int>> GetNewTransitions();
+	void FindNextEquivalenceClass(const std::vector <std::vector<int>> newTransitions);
+	void RemoveEquivalentStates();
+	void ReplaceTransitions();
 
-	std::vector <std::vector<int>>  GetInfoAboutEquivalenceStates();
+	std::vector <std::vector<int>> m_transitions;
+	std::vector <std::vector<int>> m_outputs;
 
-	std::vector <std::vector<int>> m_transitionMap;
-	std::vector <std::string> m_outputMap;
+	std::vector<int> m_splittingByEquivalenceClasses;
+	std::vector<int> m_previousSplittingByEquivalenceClasses;
 
-	std::vector <int> m_equivalenceClasses;
-	std::vector <std::vector<int>> m_equivalenceClassesToStates;
+	SMachineInfo m_machineInfo;
 
 	bool m_isThereZeroState = false;
 };
