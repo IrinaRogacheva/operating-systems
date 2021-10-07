@@ -140,6 +140,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CMealyMinimizer.cpp" />
+    <ClCompile Include="CMinimizer.cpp" />
     <ClCompile Include="CMooreMinimizer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="CConsoleControl.cpp" />
@@ -147,6 +148,7 @@
   <ItemGroup>
     <ClInclude Include="CConsoleControl.h" />
     <ClInclude Include="CMealyMinimizer.h" />
+    <ClInclude Include="CMinimizer.h" />
     <ClInclude Include="CMooreMinimizer.h" />
     <ClInclude Include="SMachineInfo.h" />
   </ItemGroup>

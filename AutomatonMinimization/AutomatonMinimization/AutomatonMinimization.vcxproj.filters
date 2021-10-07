@@ -21,6 +21,9 @@
     <ClCompile Include="CConsoleControl.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="CMinimizer.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
     <ClCompile Include="CMealyMinimizer.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -32,13 +35,16 @@
     <ClInclude Include="CConsoleControl.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="SMachineInfo.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="CMinimizer.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
     <ClInclude Include="CMealyMinimizer.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="CMooreMinimizer.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="SMachineInfo.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
