@@ -1,21 +1,21 @@
-#include "CConsoleControl.h"
+#include "CFileControl.h"
 #include <exception>
 #include <sstream>
 #include <algorithm>
 
-CConsoleControl::CConsoleControl(std::istream& input, std::ostream& output)
+CFileControl::CFileControl(std::istream& input, std::ostream& output)
 	: m_input(input)
 	, m_output(output)
 	, m_machineInfo({0, 0, 0})
 	, m_actionMap(
 		{
-			{ "Ml", std::bind(&CConsoleControl::MinimizeMealyMachine, this) },
-			{ "Mr", std::bind(&CConsoleControl::MinimizeMooreMachine, this) }
+			{ "Ml", std::bind(&CFileControl::MinimizeMealyMachine, this) },
+			{ "Mr", std::bind(&CFileControl::MinimizeMooreMachine, this) }
 		})
 {
 }
 
-void CConsoleControl::HandleCommand()
+void CFileControl::HandleCommand()
 {
 	std::string consoleLine;
 	getline(m_input, consoleLine);
@@ -27,14 +27,14 @@ void CConsoleControl::HandleCommand()
 	return it->second();
 }
 
-void CConsoleControl::MinimizeMealyMachine()
+void CFileControl::MinimizeMealyMachine()
 {
 	ReadMealyAutomaton();
 	m_mealyMinimizer.MinimizeMachine();
 	WriteMinimizedMealyAutomaton(m_mealyMinimizer.GetIsThereZeroState());
 }
 
-void CConsoleControl::WriteMinimizedMealyAutomaton(const bool isThereZeroState)
+void CFileControl::WriteMinimizedMealyAutomaton(const bool isThereZeroState)
 {
 	std::vector <std::vector<int>> transitions = m_mealyMinimizer.GetTransitions();
 	std::vector <std::vector<int>> outputs = m_mealyMinimizer.GetOutputs();
@@ -58,7 +58,7 @@ void CConsoleControl::WriteMinimizedMealyAutomaton(const bool isThereZeroState)
 	}
 }
 
-void CConsoleControl::WriteMinimizedMooreAutomaton(const bool isThereZeroState)
+void CFileControl::WriteMinimizedMooreAutomaton(const bool isThereZeroState)
 {
 	std::vector <std::vector<int>> transitions = m_mooreMinimizer.GetTransitions();
 	std::vector<int> outputs = m_mooreMinimizer.GetOutputs();
@@ -88,7 +88,7 @@ void CConsoleControl::WriteMinimizedMooreAutomaton(const bool isThereZeroState)
 	}
 }
 
-void CConsoleControl::MinimizeMooreMachine()
+void CFileControl::MinimizeMooreMachine()
 {
 	ReadOutputCharactersForMooreAutomaton();
 	ReadMooreAutomaton();
@@ -96,14 +96,14 @@ void CConsoleControl::MinimizeMooreMachine()
 	WriteMinimizedMooreAutomaton(m_mooreMinimizer.GetIsThereZeroState());
 }
 
-int CConsoleControl::ReadInt()
+int CFileControl::ReadInt()
 {
 	std::string str;
 	getline(m_input, str);
 	return  std::stoi(str);
 }
 
-void CConsoleControl::GetMachineInfo()
+void CFileControl::GetMachineInfo()
 {
 	m_machineInfo.numberOfStates = ReadInt();
 	m_machineInfo.numberOfInputCharacters = ReadInt();
@@ -113,7 +113,7 @@ void CConsoleControl::GetMachineInfo()
 	m_mooreMinimizer.SetMachineInfo(m_machineInfo);
 }
 
-void CConsoleControl::ReadMealyAutomaton()
+void CFileControl::ReadMealyAutomaton()
 {
 	std::vector <std::vector<int>> transitions(m_machineInfo.numberOfStates);
 	std::vector <std::vector<int>> outputs(m_machineInfo.numberOfStates);
@@ -145,7 +145,7 @@ void CConsoleControl::ReadMealyAutomaton()
 
 }
 
-std::string CConsoleControl::GetLineWithoutInputCharacter()
+std::string CFileControl::GetLineWithoutInputCharacter()
 {
 	std::string str;
 	getline(m_input, str);
@@ -156,7 +156,7 @@ std::string CConsoleControl::GetLineWithoutInputCharacter()
 	return str;
 }
 
-void CConsoleControl::ReadOutputCharactersForMooreAutomaton()
+void CFileControl::ReadOutputCharactersForMooreAutomaton()
 {
 	std::vector <int> outputs;
 	std::string str;
@@ -172,7 +172,7 @@ void CConsoleControl::ReadOutputCharactersForMooreAutomaton()
 	m_mooreMinimizer.SetOutputs(outputs);
 }
 
-void CConsoleControl::ReadMooreAutomaton()
+void CFileControl::ReadMooreAutomaton()
 {
 	std::vector <std::vector<int>> transitions(m_machineInfo.numberOfStates);
 

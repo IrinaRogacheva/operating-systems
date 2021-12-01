@@ -143,10 +143,10 @@
     <ClCompile Include="CMinimizer.cpp" />
     <ClCompile Include="CMooreMinimizer.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="CConsoleControl.cpp" />
+    <ClCompile Include="CFileControl.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CConsoleControl.h" />
+    <ClInclude Include="CFileControl.h" />
     <ClInclude Include="CMealyMinimizer.h" />
     <ClInclude Include="CMinimizer.h" />
     <ClInclude Include="CMooreMinimizer.h" />

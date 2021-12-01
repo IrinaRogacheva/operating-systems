@@ -7,10 +7,10 @@
 #include "CMealyMinimizer.h"
 #include "CMooreMinimizer.h"
 
-class CConsoleControl
+class CFileControl
 {
 public:
-	CConsoleControl(std::istream& input, std::ostream& output);
+	CFileControl(std::istream& input, std::ostream& output);
 	void HandleCommand();
 
 private:

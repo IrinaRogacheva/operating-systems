@@ -1,7 +1,7 @@
 ﻿#include <iostream>
 #include <string>
 #include "windows.h"
-#include "CConsoleControl.h"
+#include "CFileControl.h"
 #include <fstream>
 
 /* TODO
@@ -26,6 +26,6 @@ int main()
 	std::ifstream input("input.txt");
 	std::ofstream output("output.txt");
 
-	CConsoleControl control(input, output);
+	CFileControl control(input, output);
 	control.HandleCommand();
 }
