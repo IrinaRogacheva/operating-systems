@@ -1,6 +1,6 @@
 #include "Grammar.h"
 
-CGrammar::Grammar CGrammar::GetGrammar() const
+CGrammar::NondeterministicGrammar CGrammar::GetGrammar() const
 {
 	return m_grammar;
 }

@@ -1,17 +1,19 @@
 #include "Determinator.h"
 #include <algorithm>
 #include <iterator>
-#include <iostream>
 #include <set>
 
-void CDeterminator::Determinate()
+CGrammar::DeterministicGrammar CDeterminator::Determinate()
 {
-	std::multimap<std::pair<std::string, std::string>, std::string> grammar = m_grammar.GetGrammar();
-	std::map<std::pair<std::string, std::string>, std::string> resultGrammar;
+	GetOutsForStartState();
+	GetSimpleOuts();
+	GetCompositeOuts();
+	
+	return m_resultGrammar;
+}
 
-	typedef CGrammar::Grammar::iterator GrammarIterator;
-
-	std::set<std::pair<std::string, std::string>> uniqueKeys;
+void CDeterminator::GetOutsForStartState()
+{
 	std::string firstState;
 	if (m_grammar.GetGrammarType() == CGrammar::GrammarType::RIGHT)
 	{
@@ -23,128 +25,94 @@ void CDeterminator::Determinate()
 	}
 
 	std::string resultOut;
-	for (auto& item : grammar)
+	for (auto& item : m_grammar.GetGrammar())
 	{
-		if (!uniqueKeys.count(item.first) && item.first.first == firstState)
+		if (!m_keysWithFoundStates.count(item.first) && item.first.first == firstState)
 		{
-			std::pair<GrammarIterator, GrammarIterator> duplicateKeys = grammar.equal_range(item.first);
-			std::cout << item.first.first << " " << item.first.second << std::endl;
-			
-			for (GrammarIterator it = duplicateKeys.first; it != duplicateKeys.second; it++)
-			{
-				std::cout << it->second << std::endl;
-				resultOut.append(it->second);
-			}
-			std::sort(resultOut.begin(), resultOut.end());
-			auto res = std::unique(resultOut.begin(), resultOut.end());
-			resultOut = std::string(resultOut.begin(), res);
-			resultGrammar.emplace(item.first, resultOut);
-			std::cout << "it's result string: " << resultOut << std::endl;
-			/*if (resultOut.size() > 1)
-			{
-				grammar.insert({ {resultOut, ""}, "" });
-			}*/
-			resultOut.clear();
-			uniqueKeys.insert(item.first);
+			m_resultGrammar.emplace(item.first, GetResultOut(item.first));
+			m_keysWithFoundStates.insert(item.first);
 		}
 	}
 
-	std::cout << std::endl << "result after first action: " << std::endl;
-	for (auto& item : resultGrammar)
-	{
-		std::cout << item.first.first << " " << item.first.second << " " << item.second << std::endl;
-	}
+}
 
-	for (auto& item : grammar)
+void CDeterminator::GetSimpleOuts()
+{
+	for (auto& item : m_grammar.GetGrammar())
 	{
-		auto findResult = std::find_if(
-			resultGrammar.begin(),
-			resultGrammar.end(),
-			[item](const auto& mo) {return mo.second == item.first.first; });
+		auto findStateInResultGrammar = std::find_if(
+			m_resultGrammar.begin(),
+			m_resultGrammar.end(),
+			[item](const auto& resultGrammarItem) {return resultGrammarItem.second == item.first.first; });
 
-		std::cout << item.first.first << " " << item.first.second << std::endl;
-		if (!uniqueKeys.count(item.first) && findResult != resultGrammar.end())
+		if (!m_keysWithFoundStates.count(item.first) && findStateInResultGrammar != m_resultGrammar.end())
 		{
-			std::pair<GrammarIterator, GrammarIterator> duplicateKeys = grammar.equal_range(item.first);
-			std::cout << item.first.first << " " << item.first.second << std::endl;
-
-			for (GrammarIterator it = duplicateKeys.first; it != duplicateKeys.second; it++)
-			{
-				std::cout << it->second << std::endl;
-				resultOut.append(it->second);
-			}
-			std::sort(resultOut.begin(), resultOut.end());
-			auto res = std::unique(resultOut.begin(), resultOut.end());
-			resultOut = std::string(resultOut.begin(), res);
-			resultGrammar.emplace(item.first, resultOut);
-			std::cout << "it's result string: " << resultOut << std::endl;
-			resultOut.clear();
-			uniqueKeys.insert(item.first);
+			m_resultGrammar.emplace(item.first, GetResultOut(item.first));
+			m_keysWithFoundStates.insert(item.first);
 		}
 	}
+}
 
-	std::cout << std::endl;
-
+void CDeterminator::GetCompositeOuts()
+{
+	std::string resultOut;
 	std::set<std::string> actions = m_grammar.GetActions();
-	std::map<std::string, bool> compositeStates;
+	std::set<std::string> compositeStates;
 	bool isNewCompositeState = true;
+
 	while (isNewCompositeState)
 	{
 		isNewCompositeState = false;
-		for (auto& item : resultGrammar)
+		for (auto& item : m_resultGrammar)
 		{
-			std::cout << item.first.first << " " << item.first.second << " " << item.second << std::endl;
 			if (item.second.size() > 1)
 			{
-				std::cout << "ITEM.SECOND: " << item.second << " size: " << item.second.size() << std::endl;
-				compositeStates.emplace(item.second, false);
+				compositeStates.insert(item.second);
 			}
-			if (compositeStates.find(item.second) != compositeStates.end())
+			if (compositeStates.count(item.second) != 0)
 			{
-				std::cout << "state from item second: " << item.second << std::endl;
 				for (auto& state : item.second)
 				{
-					std::cout << "composite state: " << state << std::endl;
 					for (auto& action : actions)
 					{
-						std::cout << "action: " << action << std::endl;
 						std::string stateStr = { state };
-						std::pair<GrammarIterator, GrammarIterator> duplicateKeys = grammar.equal_range({ stateStr, action });
-
-						for (GrammarIterator it = duplicateKeys.first; it != duplicateKeys.second; it++)
-						{
-							std::cout << "from duplicate: " << it->second << std::endl;
-							resultOut.append(it->second);
-						}
+						resultOut = GetResultOut({ stateStr, action }, item.second);
 						if (!resultOut.empty())
 						{
-							std::cout << "stateStr: " << item.second << " action: " << action << " resultOut: " << resultOut << std::endl;
-							std::string out = resultGrammar[{item.second, action}];
-							out.append(resultOut);
-							std::cout << "out: " << out << std::endl;
-							std::sort(out.begin(), out.end());
-							std::cout << "sorted out: " << out << std::endl;
-							auto res = std::unique(out.begin(), out.end());
-							out = std::string(out.begin(), res);
-							std::cout << "sorted unique out: " << out << std::endl;
-							resultGrammar[{item.second, action}] = out;
-							if (out.size() > 1 && compositeStates.find(out) == compositeStates.end())
+							m_resultGrammar[{item.second, action}] = resultOut;
+							if (resultOut.size() > 1 && compositeStates.find(resultOut) == compositeStates.end())
 							{
-								compositeStates[out] = false;
+								compositeStates.insert(resultOut);
 								isNewCompositeState = true;
 							}
-							std::cout << "it's result string from composite str: " << resultOut << std::endl;
 							resultOut.clear();
 						}
 					}
 				}
 			}
-			compositeStates[item.second] = true;
 		}
 	}
-	std::cout << "Result" << std::endl;
-	for (auto& item : resultGrammar)
+}
+
+std::string CDeterminator::GetResultOut(const std::pair<std::string, std::string>& stateActionPair, const std::string& changeableState)
+{
+	typedef CGrammar::NondeterministicGrammar::iterator GrammarIterator;
+	CGrammar::NondeterministicGrammar grammar = m_grammar.GetGrammar();
+
+	std::string resultOut;
+	if (m_resultGrammar.find({ changeableState , stateActionPair.second}) != m_resultGrammar.end())
 	{
-		std::cout << item.first.first << " " << item.first.second << " " << item.second << std::endl;
+		resultOut = m_resultGrammar[{ changeableState, stateActionPair.second}];
 	}
+	
+	std::pair<GrammarIterator, GrammarIterator> duplicateKeys = grammar.equal_range(stateActionPair);
+	for (GrammarIterator it = duplicateKeys.first; it != duplicateKeys.second; it++)
+	{
+		resultOut.append(it->second);
+	}
+	std::sort(resultOut.begin(), resultOut.end());
+	auto res = std::unique(resultOut.begin(), resultOut.end());
+	resultOut = std::string(resultOut.begin(), res);
+
+	return resultOut;
 }

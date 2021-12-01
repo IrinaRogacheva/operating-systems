@@ -14,5 +14,5 @@ int main()
 	CGrammar grammar = fileControl.ReadGrammar();
 
 	CDeterminator determinator(grammar);
-	determinator.Determinate();
+	fileControl.WriteGrammar(determinator.Determinate(), grammar.GetActions());
 }
