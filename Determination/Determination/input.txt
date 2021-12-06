@@ -1,4 +1,4 @@
-R
+L
 2
-S aS|aB|cS|c
-B bB|aB|a
+S Sb|Aa|a|b
+A Aa|Sb|a

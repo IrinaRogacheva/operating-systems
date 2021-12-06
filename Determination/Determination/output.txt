@@ -1,15 +1,14 @@
 Non-deterministic:
-B a B
-B a H
-B b B
-S a S
-S a B
-S c S
-S c H
+A a S
+A a A
+H a S
+H a A
+H b S
+S b S
+S b A
 
 Deterministic:
-      a     b     c     
-BHS   BHS   B     HS    
-BS    BHS   B     HS    
-HS    BS          HS    
-S     BS          HS    
+      a     b     
+AS    AS    AS    
+H     AS    S     
+S           AS    
