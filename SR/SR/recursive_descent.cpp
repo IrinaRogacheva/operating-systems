@@ -122,7 +122,7 @@ void CheckExpression(std::istream& is, std::ostream& os)
     std::string str;
     getline(is, str);
 
-    if (F(str))
+    if (E(str))
     {
         os << "Ok\n";
     }
