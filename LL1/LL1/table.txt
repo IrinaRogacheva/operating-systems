@@ -1,0 +1,32 @@
+S	- ( 7 a	n	y	2	n	n
+E	- ( 7 a	n	y	4	y	n
+end	end	y	y	-1	n	y
+E	- ( 7 a	n	y	5	n	n
+T	- ( 7 a	n	y	7	y	n
+M	end ) +	n	y	10	n	n
+T	- ( 7 a	n	y	8	n	n
+F	- ( 7 a	n	y	16	y	n
+N	end ) + *	n	y	27	n	n
+M	end )	n	n	12	n	n
+M	+	n	y	13	n	n
+	end )	n	y	0	n	n
++	+	y	y	14	n	n
+T	- ( 7 a	n	y	7	y	n
+M	end ) +	n	y	10	n	n
+F	-	n	n	20	n	n
+F	(	n	n	22	n	n
+F	7	n	n	25	n	n
+F	a	n	y	26	n	n
+-	-	y	y	21	n	n
+F	- ( 7 a	n	y	16	n	n
+(	(	y	y	23	n	n
+E	- ( 7 a	n	y	4	y	n
+)	)	y	y	0	n	n
+7	7	y	y	0	n	n
+a	a	y	y	0	n	n
+N	end ) +	n	n	29	n	n
+N	*	n	y	30	n	n
+	end ) +	n	y	0	n	n
+*	*	y	y	31	n	n
+F	- ( 7 a	n	y	16	y	n
+N	end ) + *	n	y	27	n	n
